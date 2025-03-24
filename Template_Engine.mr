@@ -53,8 +53,16 @@ label crank_moment(disk_moment_of_inertia(mass: crank_mass, radius: corsa))
 label flywheel_moment(disk_moment_of_inertia(mass: flywheel_mass, radius: flywheel_radius))
 label other_moment(disk_moment_of_inertia(mass: 10 * units.kg, radius: 1.0 * units.cm))
 
-
 label spacing(0.0 * units.inch)
+
+label rot180(180 * units.deg)
+label rot360(360 * units.deg)
+
+label attenuazione_flusso(1.0)
+label scala_aumento(1.0)
+
+label centro_lobo_aspirazione(114 * units.deg)
+label centro_lobo_scarico(114 * units.deg)
 
 
 function timing_curve(1000 * units.rpm)
@@ -164,34 +172,115 @@ exhaust_system sistema_scarico(
     impulse_response: ir_lib.mild_exhaust_0_reverb
 )
 
-harmonic_cam_lobe aspirazione_lobo(
+harmonic_cam_lobe profilo_asporazione(
     duration_at_50_thou: 222 * units.deg,
     gamma: 1.0,
     lift: 500 * units.thou,
     steps: 100
 )
 
-harmonic_cam_lobe scarico_lobo(
+harmonic_cam_lobe profilo_scarico(
     duration_at_50_thou: 226 * units.deg,
     gamma: 1.0,
     lift: 500 * units.thou,
     steps: 100
 )
 
-camshaft_parameters params (
+private node albero_camme {
+    input lobe_profile: "N/A";
+    input intake_lobe_profile: profilo_asporazione;
+    input exhaust_lobe_profile: profilo_scarico;
+    input intake_lobe_center: centro_lobo_aspirazione;
+    input exhaust_lobe_center: centro_lobo_scarico;
+    input base_radius: 1.00 * units.inch;
+    input advance: 0 * units.deg;
+
+    output intake_cam_1: albero_camme_asporazione_1;
+    output exhaust_cam_1: albero_camme_scarico_1;
+    output intake_cam_2: albero_camme_asporazione_2;
+    output exhaust_cam_2: albero_camme_scarico_2;
+}
+
+albero_camme camshaft()
+
+camshaft albero_camme_asporazione_1(
     advance: 0 * units.deg,
-    base_radius: 0.5 * units.inch
+    base_radius: 0.5 * units.inch,
+    lobe_profile: profilo_asporazione
 )
+albero_camme_asporazione_1.add_lobe(rot360 - centro_lobo_aspirazione + 0 * units.deg)
+albero_camme_asporazione_1.add_lobe(rot360 - centro_lobo_aspirazione + 480 * units.deg)
+albero_camme_asporazione_1.add_lobe(rot360 - centro_lobo_aspirazione + 240 * units.deg)
 
-even_fire_v6_camshaft camshaft(
-        lobe_profile: "N/A",
-        intake_lobe_profile: aspirazione_lobo,
-        exhaust_lobe_profile: scarico_lobo,
-        intake_lobe_center: 114 * units.deg,
-        exhaust_lobe_center: 114 * units.deg,
-        base_radius: 1.00 * units.inch
+camshaft albero_camme_scarico_1(
+    advance: 0 * units.deg,
+    base_radius: 0.5 * units.inch,
+    lobe_profile: profilo_scarico
+)
+albero_camme_scarico_1.add_lobe(rot360 - centro_lobo_scarico + 0 * units.deg)
+albero_camme_scarico_1.add_lobe(rot360 - centro_lobo_scarico + 480 * units.deg)
+albero_camme_scarico_1.add_lobe(rot360 - centro_lobo_scarico + 240 * units.deg)
+
+camshaft albero_camme_asporazione_2(
+    advance: 0 * units.deg,
+    base_radius: 0.5 * units.inch,
+    lobe_profile: profilo_asporazione
+)
+albero_camme_asporazione_2.add_lobe(rot360 - centro_lobo_aspirazione + 600 * units.deg)
+albero_camme_asporazione_2.add_lobe(rot360 - centro_lobo_aspirazione + 360 * units.deg)
+albero_camme_asporazione_2.add_lobe(rot360 - centro_lobo_aspirazione + 120 * units.deg)
+
+camshaft albero_camme_scarico_2(
+    advance: 0 * units.deg,
+    base_radius: 0.5 * units.inch,
+    lobe_profile: profilo_scarico
+)
+albero_camme_scarico_2.add_lobe(rot360 - centro_lobo_scarico + 600 * units.deg)
+albero_camme_scarico_2.add_lobe(rot360 - centro_lobo_scarico + 360 * units.deg)
+albero_camme_scarico_2.add_lobe(rot360 - centro_lobo_scarico + 120 * units.deg)
+
+
+
+function flusso_aspirazione(50 * units.thou)
+flusso_aspirazione.add_flow_sample(0 * scala_aumento, 0 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(50 * scala_aumento, 58 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(100 * scala_aumento, 103 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(150 * scala_aumento, 156 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(200 * scala_aumento, 214 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(250 * scala_aumento, 249 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(300 * scala_aumento, 268 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(350 * scala_aumento, 280 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(400 * scala_aumento, 280 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(450 * scala_aumento, 281 * attenuazione_flusso)
+
+function flusso_scarico(50 * units.thou)
+flusso_scarico.add_flow_sample(0 * scala_aumento, 0 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(50 * scala_aumento, 37 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(100 * scala_aumento, 72 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(150 * scala_aumento, 113 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(200 * scala_aumento, 160 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(250 * scala_aumento, 196 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(300 * scala_aumento, 222 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(350 * scala_aumento, 235 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(400 * scala_aumento, 245 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(450 * scala_aumento, 246 * attenuazione_flusso)
+
+head testata_motore(
+    intake_camshaft: flusso_aspirazione,
+    exhaust_camshaft: flusso_scarico,
+    chamber_volume: 27 * units.cc,
+    intake_runner_volume: 249.6 * units.cc,
+    intake_runner_cross_section_area: 1.30 * units.inch * 1.30 * units.inch,
+    exhaust_runner_volume: 150.0 * units.cc,
+    exhaust_runner_cross_section_area: 1.15 * units.inch * 1.15 * units.inch,
+    flow_attenuation: attenuazione_flusso,
+    lift_scale: scala_aumento,
+    flip_display: false,
+    valvetrain: standard_valvetrain(
+        intake_camshaft: intake_camshaft,
+        exhaust_camshaft: exhaust_camshaft
     )
-
+)
 
 cylinder_bank banco_cilindri_1(
     bore: foro_cilindro,
@@ -280,7 +369,8 @@ banco_cilindri_2.add_cylinder(
 banco_cilindri_2.set_cylinder_head(
     testata_motore(
         intake_camshaft: camshaft.intake_cam_2,
-        exhaust_camshaft: camshaft.exhaust_cam_2
+        exhaust_camshaft: camshaft.exhaust_cam_2,
+        flip_display: true
     )
 )
 
