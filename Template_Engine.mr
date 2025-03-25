@@ -186,7 +186,7 @@ harmonic_cam_lobe profilo_scarico(
     steps: 100
 )
 
-private node albero_camme {
+public node albero_camme {
     input lobe_profile: "N/A";
     input intake_lobe_profile: profilo_asporazione;
     input exhaust_lobe_profile: profilo_scarico;
@@ -240,7 +240,6 @@ albero_camme_scarico_2.add_lobe(rot360 - centro_lobo_scarico + 360 * units.deg)
 albero_camme_scarico_2.add_lobe(rot360 - centro_lobo_scarico + 120 * units.deg)
 
 
-
 function flusso_aspirazione(50 * units.thou)
 flusso_aspirazione.add_flow_sample(0 * scala_aumento, 0 * attenuazione_flusso)
 flusso_aspirazione.add_flow_sample(50 * scala_aumento, 58 * attenuazione_flusso)
@@ -265,22 +264,40 @@ flusso_scarico.add_flow_sample(350 * scala_aumento, 235 * attenuazione_flusso)
 flusso_scarico.add_flow_sample(400 * scala_aumento, 245 * attenuazione_flusso)
 flusso_scarico.add_flow_sample(450 * scala_aumento, 246 * attenuazione_flusso)
 
-head testata_motore(
-    intake_camshaft: flusso_aspirazione,
-    exhaust_camshaft: flusso_scarico,
-    chamber_volume: 27 * units.cc,
-    intake_runner_volume: 249.6 * units.cc,
-    intake_runner_cross_section_area: 1.30 * units.inch * 1.30 * units.inch,
-    exhaust_runner_volume: 150.0 * units.cc,
-    exhaust_runner_cross_section_area: 1.15 * units.inch * 1.15 * units.inch,
-    flow_attenuation: attenuazione_flusso,
-    lift_scale: scala_aumento,
-    flip_display: false,
-    valvetrain: standard_valvetrain(
+public node testata_motore{
+    input intake_camshaft;
+    input exhaust_camshaft;
+    input chamber_volume: 27 * units.cc;
+    input intake_runner_volume: 249.6 * units.cc;
+    input intake_runner_cross_section_area: 1.30 * units.inch * 1.30 * units.inch;
+    input exhaust_runner_volume: 150.0 * units.cc;
+    input exhaust_runner_cross_section_area: 1.15 * units.inch * 1.15 * units.inch;
+    input flow_attenuation: attenuazione_flusso;
+    input lift_scale: scala_aumento;
+    input flip_display: false;
+    input valvetrain: standard_valvetrain(
         intake_camshaft: intake_camshaft,
         exhaust_camshaft: exhaust_camshaft
+    );
+    
+    alias output __out: head;
+
+    generic_cylinder_head head(
+        chamber_volume: chamber_volume,
+        intake_runner_volume: intake_runner_volume,
+        intake_runner_cross_section_area: intake_runner_cross_section_area,
+        exhaust_runner_volume: exhaust_runner_volume,
+        exhaust_runner_cross_section_area: exhaust_runner_cross_section_area,
+
+        intake_port_flow: flusso_aspirazione,
+        exhaust_port_flow: flusso_scarico,
+        valvetrain: standard_valvetrain(
+            intake_camshaft: intake_camshaft,
+            exhaust_camshaft: exhaust_camshaft
+        ),
+        flip_display: flip_display
     )
-)
+}
 
 cylinder_bank banco_cilindri_1(
     bore: foro_cilindro,
@@ -321,10 +338,8 @@ banco_cilindri_1.add_cylinder(
 )
 
 banco_cilindri_1.set_cylinder_head(
-    testata_motore(
-        intake_camshaft: camshaft.intake_cam_1,
-        exhaust_camshaft: camshaft.exhaust_cam_1
-    )
+    head: testata_motore(intake_camshaft: camshaft.intake_cam_1,
+        exhaust_camshaft: camshaft.exhaust_cam_1)
 )
 
 
@@ -367,11 +382,9 @@ banco_cilindri_2.add_cylinder(
 )
 
 banco_cilindri_2.set_cylinder_head(
-    testata_motore(
-        intake_camshaft: camshaft.intake_cam_2,
-        exhaust_camshaft: camshaft.exhaust_cam_2,
-        flip_display: true
-    )
+    head: testata_motore(intake_camshaft: camshaft.intake_cam_1,
+        exhaust_camshaft: camshaft.exhaust_cam_1,
+        flip_display: true)
 )
 
 
