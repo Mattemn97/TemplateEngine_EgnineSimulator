@@ -1,0 +1,464 @@
+import "engine_sim.mr"
+
+units units()
+constants constants()
+impulse_response_library ir_lib()
+
+label peso_veicolo(700 * units.kg)
+label coefficiente_drag(0.75)
+label altezza_veicolo(92 * units.cm)
+label larghezza_veicolo(195 * units.cm)
+label rapporto_differenziale(2.1)
+label raggio_ruote(13 / 2 * units.inch)
+label resistenza_rotolamento(250 * units.N)
+label rigidita_sospensioni(68 * units.Nm / units.deg)
+label smorzamento_sospensioni(1.0)
+label massima_flessione(30 * units.deg)
+label limite_flessione(true)
+label simula_flessione(false)
+label massima_forza_frenante(5000 * units.N)
+
+label massima_coppia_trasmissione(678 * units.Nm)
+
+label massa_molecolare(124 * units.g)
+label densita_energetica(75 * units.kJ / units.g)
+label densita(0.77 * units.kg / units.L)
+label rapporto_AFR(12.5)
+label massima_efficenza_scoppio(2.0)
+label casualita_efficenza_scoppio(0.2)
+label massima_turbolenza(10.0)
+label massima_diluizione(0.0)
+
+label coppia_starter(225 * units.lb_ft)
+label velocita_starter(1500 * units.rpm)
+label zona_rossa(16000 * units.rpm)
+label proporzione_acceleratore(1.0)
+label frequenza_simulaizone(10000)
+
+label foro_cilindro(79 * units.mm)
+label corsa(63.5 * units.mm)
+
+label rod_length(4 * units.inch)
+label rod_mass(100 * units.g)
+label compression_height(1.0 * units.inch)
+
+label massa_pistone(100 * units.g)
+
+label ciclo_combustione(2 * 360 * units.deg)
+label ciclo_pistoni(2 * 360 * units.deg)
+
+label crank_mass(5 * units.lb)
+label flywheel_mass(5 * units.lb)
+label flywheel_radius(3 * units.inch)
+
+label crank_moment(disk_moment_of_inertia(mass: crank_mass, radius: corsa))
+label flywheel_moment(disk_moment_of_inertia(mass: flywheel_mass, radius: flywheel_radius))
+label other_moment(disk_moment_of_inertia(mass: 10 * units.kg, radius: 1.0 * units.cm))
+
+label spacing(0.0 * units.inch)
+
+label sfaratura_valvole_scarico((0.50 / 4.0) * ciclo_combustione)
+label sfaratura_valvole_aspirazione((2.0 / 4.0) * ciclo_combustione)
+
+label attenuazione_flusso(1.0)
+label scala_aumento(1.0)
+
+label centro_lobo_aspirazione(114 * units.deg)
+label centro_lobo_scarico(114 * units.deg)
+
+
+function timing_curve(1000 * units.rpm)
+timing_curve.add_sample(0000 * units.rpm, 10 * units.deg)
+timing_curve.add_sample(1000 * units.rpm, 20 * units.deg)
+timing_curve.add_sample(2000 * units.rpm, 25 * units.deg)
+timing_curve.add_sample(3000 * units.rpm, 30 * units.deg)
+timing_curve.add_sample(4000 * units.rpm, 35 * units.deg)
+timing_curve.add_sample(5000 * units.rpm, 40 * units.deg)
+timing_curve.add_sample(6000 * units.rpm, 45 * units.deg)
+timing_curve.add_sample(7000 * units.rpm, 50 * units.deg)
+timing_curve.add_sample(8000 * units.rpm, 55 * units.deg)
+timing_curve.add_sample(9000 * units.rpm, 60 * units.deg)
+timing_curve.add_sample(10000 * units.rpm, 65 * units.deg)
+
+
+private node wires {
+    output cavo1: ignition_wire();
+    output cavo2: ignition_wire();
+    output cavo3: ignition_wire();
+    output cavo4: ignition_wire();
+    output cavo5: ignition_wire();
+    output cavo6: ignition_wire();
+}
+
+wires cavi_modulo_accensione()
+
+fuel Fuel_E102(
+    name: "E102",
+    molecular_mass: massa_molecolare, 
+    energy_density: densita_energetica,
+    density: densita,
+    molecular_afr: rapporto_AFR,		
+    max_burning_efficiency: massima_efficenza_scoppio,
+    burning_efficiency_randomness: casualita_efficenza_scoppio,
+    max_turbulence_effect: massima_turbolenza,
+    max_dilution_effect: massima_diluizione
+)
+
+ignition_module modulo_accensione(
+    timing_curve: timing_curve,
+    rev_limit: zona_rossa,
+    limiter_duration: 0.05
+)
+
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo1, (0.0 / 6.0) * ciclo_pistoni)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo2, (1.0 / 6.0) * ciclo_pistoni)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo3, (2.0 / 6.0) * ciclo_pistoni)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo4, (3.0 / 6.0) * ciclo_pistoni)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo5, (4.0 / 6.0) * ciclo_pistoni)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo6, (5.0 / 6.0) * ciclo_pistoni)
+
+piston_parameters piston_params(
+    mass: massa_pistone,
+    compression_height: compression_height,
+    wrist_pin_position: 0.0,
+    displacement: 0.0
+)
+
+connecting_rod_parameters connecting_rod_params(
+    mass: rod_mass,
+    moment_of_inertia: rod_moment_of_inertia(
+        mass: rod_mass,
+        length: rod_length
+    ),
+    center_of_mass: 0.0,
+    length: rod_length
+)
+
+crankshaft albero_motore(
+    throw: corsa / 2.5,
+    flywheel_mass: flywheel_mass,
+    mass: crank_mass,
+    friction_torque: 1.0 * units.lb_ft,
+    moment_of_inertia: crank_moment + flywheel_moment + other_moment,
+    position_x: 0.0,
+    position_y: 0.0,
+    tdc: 45 * units.deg
+)
+
+rod_journal rod_journal1(angle: (0.0 / 6.0) * ciclo_pistoni)
+rod_journal rod_journal2(angle: (1.0 / 6.0) * ciclo_pistoni)
+rod_journal rod_journal3(angle: (2.0 / 6.0) * ciclo_pistoni)
+rod_journal rod_journal4(angle: (3.0 / 6.0) * ciclo_pistoni)
+rod_journal rod_journal5(angle: (4.0 / 6.0) * ciclo_pistoni)
+rod_journal rod_journal6(angle: (5.0 / 6.0) * ciclo_pistoni)
+
+albero_motore.add_rod_journal(rod_journal1)
+albero_motore.add_rod_journal(rod_journal2)
+albero_motore.add_rod_journal(rod_journal3)
+albero_motore.add_rod_journal(rod_journal4)
+albero_motore.add_rod_journal(rod_journal5)
+albero_motore.add_rod_journal(rod_journal6)
+
+intake aspirazione(
+    plenum_volume: 1.325 * units.L,
+    plenum_cross_section_area: 20.0 * units.cm2,
+    intake_flow_rate: k_carb(1400.0),
+    runner_flow_rate: k_carb(1250.0),
+    runner_length: 4.0 * units.inch,
+    idle_flow_rate: k_carb(0.12),
+    idle_throttle_plate_position: 0.998,
+    velocity_decay: 1.00001
+)
+
+exhaust_system sistema_scarico_1(
+    outlet_flow_rate: k_carb(1500.0),
+    primary_tube_length: 5.0 * units.inch,
+    primary_flow_rate: k_carb(500.0),
+    velocity_decay: 1.00001,
+    length: 8.0 * units.inch,
+    audio_volume: 5.0,
+    impulse_response: ir_lib.mild_exhaust_0_reverb
+)
+
+exhaust_system sistema_scarico_2(
+    outlet_flow_rate: k_carb(1500.0),
+    primary_tube_length: 5.0 * units.inch,
+    primary_flow_rate: k_carb(500.0),
+    velocity_decay: 1.00001,
+    length: 8.0 * units.inch,
+    audio_volume: 5.0,
+    impulse_response: ir_lib.mild_exhaust_0_reverb
+)
+
+harmonic_cam_lobe profilo_asporazione(
+    duration_at_50_thou: 222 * units.deg,
+    gamma: 1.0,
+    lift: 500 * units.thou,
+    steps: 100
+)
+
+harmonic_cam_lobe profilo_scarico(
+    duration_at_50_thou: 226 * units.deg,
+    gamma: 1.0,
+    lift: 500 * units.thou,
+    steps: 100
+)
+
+public node albero_camme {
+    input lobe_profile: "N/A";
+    input intake_lobe_profile: profilo_asporazione;
+    input exhaust_lobe_profile: profilo_scarico;
+    input intake_lobe_center: centro_lobo_aspirazione;
+    input exhaust_lobe_center: centro_lobo_scarico;
+    input base_radius: 1.00 * units.inch;
+    input advance: 0 * units.deg;
+
+    output intake_cam_1: albero_camme_asporazione_1;
+    output exhaust_cam_1: albero_camme_scarico_1;
+    output intake_cam_2: albero_camme_asporazione_2;
+    output exhaust_cam_2: albero_camme_scarico_2;
+}
+
+albero_camme camshaft()
+
+camshaft albero_camme_asporazione_1(
+    advance: 0 * units.deg,
+    base_radius: 0.5 * units.inch,
+    lobe_profile: profilo_asporazione
+)
+albero_camme_asporazione_1.add_lobe(centro_lobo_aspirazione + (0.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
+albero_camme_asporazione_1.add_lobe(centro_lobo_aspirazione + (2.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
+albero_camme_asporazione_1.add_lobe(centro_lobo_aspirazione + (4.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
+
+camshaft albero_camme_scarico_1(
+    advance: 0 * units.deg,
+    base_radius: 0.5 * units.inch,
+    lobe_profile: profilo_scarico
+)
+albero_camme_scarico_1.add_lobe(centro_lobo_scarico + (0.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
+albero_camme_scarico_1.add_lobe(centro_lobo_scarico + (2.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
+albero_camme_scarico_1.add_lobe(centro_lobo_scarico + (4.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
+
+camshaft albero_camme_asporazione_2(
+    advance: 0 * units.deg,
+    base_radius: 0.5 * units.inch,
+    lobe_profile: profilo_asporazione
+)
+albero_camme_asporazione_2.add_lobe(centro_lobo_aspirazione + (1.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
+albero_camme_asporazione_2.add_lobe(centro_lobo_aspirazione + (3.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
+albero_camme_asporazione_2.add_lobe(centro_lobo_aspirazione + (5.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
+
+camshaft albero_camme_scarico_2(
+    advance: 0 * units.deg,
+    base_radius: 0.5 * units.inch,
+    lobe_profile: profilo_scarico
+)
+albero_camme_scarico_2.add_lobe(centro_lobo_scarico + (1.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
+albero_camme_scarico_2.add_lobe(centro_lobo_scarico + (3.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
+albero_camme_scarico_2.add_lobe(centro_lobo_scarico + (5.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
+
+
+function flusso_aspirazione(50 * units.thou)
+flusso_aspirazione.add_flow_sample(0 * scala_aumento, 0 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(50 * scala_aumento, 58 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(100 * scala_aumento, 103 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(150 * scala_aumento, 156 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(200 * scala_aumento, 214 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(250 * scala_aumento, 249 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(300 * scala_aumento, 268 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(350 * scala_aumento, 280 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(400 * scala_aumento, 280 * attenuazione_flusso)
+flusso_aspirazione.add_flow_sample(450 * scala_aumento, 281 * attenuazione_flusso)
+
+function flusso_scarico(50 * units.thou)
+flusso_scarico.add_flow_sample(0 * scala_aumento, 0 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(50 * scala_aumento, 37 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(100 * scala_aumento, 72 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(150 * scala_aumento, 113 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(200 * scala_aumento, 160 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(250 * scala_aumento, 196 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(300 * scala_aumento, 222 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(350 * scala_aumento, 235 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(400 * scala_aumento, 245 * attenuazione_flusso)
+flusso_scarico.add_flow_sample(450 * scala_aumento, 246 * attenuazione_flusso)
+
+public node testata_motore{
+    input intake_camshaft;
+    input exhaust_camshaft;
+    input chamber_volume: 27 * units.cc;
+    input intake_runner_volume: 249.6 * units.cc;
+    input intake_runner_cross_section_area: 1.30 * units.inch * 1.30 * units.inch;
+    input exhaust_runner_volume: 150.0 * units.cc;
+    input exhaust_runner_cross_section_area: 1.15 * units.inch * 1.15 * units.inch;
+    input flow_attenuation: attenuazione_flusso;
+    input lift_scale: scala_aumento;
+    input flip_display: false;
+    input valvetrain: standard_valvetrain(
+        intake_camshaft: intake_camshaft,
+        exhaust_camshaft: exhaust_camshaft
+    );
+    
+    alias output __out: head;
+
+    generic_cylinder_head head(
+        chamber_volume: chamber_volume,
+        intake_runner_volume: intake_runner_volume,
+        intake_runner_cross_section_area: intake_runner_cross_section_area,
+        exhaust_runner_volume: exhaust_runner_volume,
+        exhaust_runner_cross_section_area: exhaust_runner_cross_section_area,
+
+        intake_port_flow: flusso_aspirazione,
+        exhaust_port_flow: flusso_scarico,
+        valvetrain: standard_valvetrain(
+            intake_camshaft: intake_camshaft,
+            exhaust_camshaft: exhaust_camshaft
+        ),
+        flip_display: flip_display
+    )
+}
+
+cylinder_bank banco_cilindri_1(
+    bore: foro_cilindro,
+    deck_height: corsa / 2 + rod_length + compression_height,
+    angle: -40.0 * units.deg
+)
+
+banco_cilindri_1.add_cylinder(
+    piston: piston(piston_params, blowby: k_28inH2O(0.1)),
+    connecting_rod: connecting_rod(connecting_rod_params),
+    rod_journal: rod_journal1,
+    intake: aspirazione,
+    exhaust_system: sistema_scarico_1,
+    ignition_wire: cavi_modulo_accensione.cavo1,
+    sound_attenuation: 0.8,
+    primary_length: spacing * 2
+)
+
+banco_cilindri_1.add_cylinder(
+    piston: piston(piston_params, blowby: k_28inH2O(0.2)),
+    connecting_rod: connecting_rod(connecting_rod_params),
+    rod_journal: rod_journal3,
+    intake: aspirazione,
+    exhaust_system: sistema_scarico_1,
+    ignition_wire: cavi_modulo_accensione.cavo3,
+    sound_attenuation: 0.9,
+    primary_length: spacing * 1
+)
+
+banco_cilindri_1.add_cylinder(
+    piston: piston(piston_params, blowby: k_28inH2O(0.2)),
+    connecting_rod: connecting_rod(connecting_rod_params),
+    rod_journal: rod_journal5,
+    intake: aspirazione,
+    exhaust_system: sistema_scarico_1,
+    ignition_wire: cavi_modulo_accensione.cavo5,
+    primary_length: spacing * 0
+)
+
+banco_cilindri_1.set_cylinder_head(
+    head: testata_motore(
+        intake_camshaft: camshaft.intake_cam_1,
+        exhaust_camshaft: camshaft.exhaust_cam_1)
+)
+
+
+cylinder_bank banco_cilindri_2(
+    bore: foro_cilindro,
+    deck_height: corsa / 2 + rod_length + compression_height,
+    angle: 40.0 * units.deg
+)
+
+banco_cilindri_2.add_cylinder(
+    piston: piston(piston_params, blowby: k_28inH2O(0.1)),
+    connecting_rod: connecting_rod(connecting_rod_params),
+    rod_journal: rod_journal2,
+    intake: aspirazione,
+    exhaust_system: sistema_scarico_2,
+    ignition_wire: cavi_modulo_accensione.cavo2,
+    sound_attenuation: 0.6,
+    primary_length: spacing * 2
+)
+
+banco_cilindri_2.add_cylinder(
+    piston: piston(piston_params, blowby: k_28inH2O(0.2)),
+    connecting_rod: connecting_rod(connecting_rod_params),
+    rod_journal: rod_journal4,
+    intake: aspirazione,
+    exhaust_system: sistema_scarico_2,
+    ignition_wire: cavi_modulo_accensione.cavo4,
+    sound_attenuation: 0.3,
+    primary_length: spacing * 1
+)
+
+banco_cilindri_2.add_cylinder(
+    piston: piston(piston_params, blowby: k_28inH2O(0.2)),
+    connecting_rod: connecting_rod(connecting_rod_params),
+    rod_journal: rod_journal6,
+    intake: aspirazione,
+    exhaust_system: sistema_scarico_2,
+    ignition_wire: cavi_modulo_accensione.cavo6,
+    sound_attenuation: 1.1,
+    primary_length: spacing * 0
+)
+
+banco_cilindri_2.set_cylinder_head(
+    head: testata_motore(
+        intake_camshaft: camshaft.intake_cam_2,
+        exhaust_camshaft: camshaft.exhaust_cam_2,
+        flip_display: true)
+)
+
+
+
+engine motore(
+    name: "V6",
+    starter_torque: coppia_starter,
+    starter_speed: velocita_starter,
+    redline: zona_rossa,
+    throttle_gamma: proporzione_acceleratore,
+    simulation_frequency: frequenza_simulaizone,
+    fuel: Fuel_E102
+)
+
+motore.add_cylinder_bank(banco_cilindri_1)
+motore.add_cylinder_bank(banco_cilindri_2)
+
+motore.add_crankshaft(albero_motore)
+
+motore.add_ignition_module(modulo_accensione)
+
+vehicle veicolo(
+    mass: peso_veicolo,
+    drag_coefficient: coefficiente_drag, 
+    cross_sectional_area: altezza_veicolo * larghezza_veicolo,
+    diff_ratio: rapporto_differenziale,
+    tire_radius: raggio_ruote,
+    rolling_resistance: resistenza_rotolamento,
+    stiffness: rigidita_sospensioni,
+    damping: smorzamento_sospensioni,
+    max_flex: massima_flessione,
+    limit_flex: limite_flessione,
+    simulate_flex: simula_flessione,
+    max_brake_force: massima_forza_frenante
+)
+
+transmission cambio(
+    max_clutch_torque: massima_coppia_trasmissione
+)
+
+cambio.add_gear(5.00)
+cambio.add_gear(4.00)
+cambio.add_gear(3.00)
+cambio.add_gear(2.66)
+cambio.add_gear(2.33)
+cambio.add_gear(2.00)
+
+public node main {
+    run(
+        transmission: cambio,
+        vehicle: veicolo,
+        engine: motore
+    )
+}
+
+main()
