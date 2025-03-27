@@ -162,7 +162,17 @@ intake aspirazione(
     velocity_decay: 1.00001
 )
 
-exhaust_system sistema_scarico(
+exhaust_system sistema_scarico_1(
+    outlet_flow_rate: k_carb(1500.0),
+    primary_tube_length: 5.0 * units.inch,
+    primary_flow_rate: k_carb(500.0),
+    velocity_decay: 1.00001,
+    length: 8.0 * units.inch,
+    audio_volume: 5.0,
+    impulse_response: ir_lib.mild_exhaust_0_reverb
+)
+
+exhaust_system sistema_scarico_2(
     outlet_flow_rate: k_carb(1500.0),
     primary_tube_length: 5.0 * units.inch,
     primary_flow_rate: k_carb(500.0),
@@ -208,9 +218,9 @@ camshaft albero_camme_asporazione_1(
     base_radius: 0.5 * units.inch,
     lobe_profile: profilo_asporazione
 )
-albero_camme_asporazione_1.add_lobe(rot360 - centro_lobo_aspirazione + 0 * units.deg)
-albero_camme_asporazione_1.add_lobe(rot360 - centro_lobo_aspirazione + 480 * units.deg)
-albero_camme_asporazione_1.add_lobe(rot360 - centro_lobo_aspirazione + 240 * units.deg)
+albero_camme_asporazione_1.add_lobe(rot360 + centro_lobo_aspirazione + 0 * units.deg)
+albero_camme_asporazione_1.add_lobe(rot360 + centro_lobo_aspirazione + 480 * units.deg)
+albero_camme_asporazione_1.add_lobe(rot360 + centro_lobo_aspirazione + 240 * units.deg)
 
 camshaft albero_camme_scarico_1(
     advance: 0 * units.deg,
@@ -226,9 +236,9 @@ camshaft albero_camme_asporazione_2(
     base_radius: 0.5 * units.inch,
     lobe_profile: profilo_asporazione
 )
-albero_camme_asporazione_2.add_lobe(rot360 - centro_lobo_aspirazione + 600 * units.deg)
-albero_camme_asporazione_2.add_lobe(rot360 - centro_lobo_aspirazione + 360 * units.deg)
-albero_camme_asporazione_2.add_lobe(rot360 - centro_lobo_aspirazione + 120 * units.deg)
+albero_camme_asporazione_2.add_lobe(rot360 + centro_lobo_aspirazione + 600 * units.deg)
+albero_camme_asporazione_2.add_lobe(rot360 + centro_lobo_aspirazione + 360 * units.deg)
+albero_camme_asporazione_2.add_lobe(rot360 + centro_lobo_aspirazione + 120 * units.deg)
 
 camshaft albero_camme_scarico_2(
     advance: 0 * units.deg,
@@ -302,7 +312,7 @@ public node testata_motore{
 cylinder_bank banco_cilindri_1(
     bore: foro_cilindro,
     deck_height: corsa / 2 + rod_length + compression_height,
-    angle: -40.0 * units.deg
+    angle: -45.0 * units.deg
 )
 
 banco_cilindri_1.add_cylinder(
@@ -310,7 +320,7 @@ banco_cilindri_1.add_cylinder(
     connecting_rod: connecting_rod(connecting_rod_params),
     rod_journal: rod_journal1,
     intake: aspirazione,
-    exhaust_system: sistema_scarico,
+    exhaust_system: sistema_scarico_1,
     ignition_wire: cavi_modulo_accensione.cavo1,
     sound_attenuation: 0.8,
     primary_length: spacing * 2
@@ -321,7 +331,7 @@ banco_cilindri_1.add_cylinder(
     connecting_rod: connecting_rod(connecting_rod_params),
     rod_journal: rod_journal3,
     intake: aspirazione,
-    exhaust_system: sistema_scarico,
+    exhaust_system: sistema_scarico_1,
     ignition_wire: cavi_modulo_accensione.cavo3,
     sound_attenuation: 0.9,
     primary_length: spacing * 1
@@ -332,13 +342,14 @@ banco_cilindri_1.add_cylinder(
     connecting_rod: connecting_rod(connecting_rod_params),
     rod_journal: rod_journal5,
     intake: aspirazione,
-    exhaust_system: sistema_scarico,
+    exhaust_system: sistema_scarico_1,
     ignition_wire: cavi_modulo_accensione.cavo5,
     primary_length: spacing * 0
 )
 
 banco_cilindri_1.set_cylinder_head(
-    head: testata_motore(intake_camshaft: camshaft.intake_cam_1,
+    head: testata_motore(
+        intake_camshaft: camshaft.intake_cam_1,
         exhaust_camshaft: camshaft.exhaust_cam_1)
 )
 
@@ -346,7 +357,7 @@ banco_cilindri_1.set_cylinder_head(
 cylinder_bank banco_cilindri_2(
     bore: foro_cilindro,
     deck_height: corsa / 2 + rod_length + compression_height,
-    angle: 40.0 * units.deg
+    angle: 45.0 * units.deg
 )
 
 banco_cilindri_2.add_cylinder(
@@ -354,9 +365,9 @@ banco_cilindri_2.add_cylinder(
     connecting_rod: connecting_rod(connecting_rod_params),
     rod_journal: rod_journal2,
     intake: aspirazione,
-    exhaust_system: sistema_scarico,
+    exhaust_system: sistema_scarico_2,
     ignition_wire: cavi_modulo_accensione.cavo2,
-    sound_attenuation: 0.8,
+    sound_attenuation: 0.6,
     primary_length: spacing * 2
 )
 
@@ -365,9 +376,9 @@ banco_cilindri_2.add_cylinder(
     connecting_rod: connecting_rod(connecting_rod_params),
     rod_journal: rod_journal4,
     intake: aspirazione,
-    exhaust_system: sistema_scarico,
+    exhaust_system: sistema_scarico_2,
     ignition_wire: cavi_modulo_accensione.cavo4,
-    sound_attenuation: 0.9,
+    sound_attenuation: 0.3,
     primary_length: spacing * 1
 )
 
@@ -376,21 +387,23 @@ banco_cilindri_2.add_cylinder(
     connecting_rod: connecting_rod(connecting_rod_params),
     rod_journal: rod_journal6,
     intake: aspirazione,
-    exhaust_system: sistema_scarico,
+    exhaust_system: sistema_scarico_2,
     ignition_wire: cavi_modulo_accensione.cavo6,
+    sound_attenuation: 1.1,
     primary_length: spacing * 0
 )
 
 banco_cilindri_2.set_cylinder_head(
-    head: testata_motore(intake_camshaft: camshaft.intake_cam_1,
-        exhaust_camshaft: camshaft.exhaust_cam_1,
+    head: testata_motore(
+        intake_camshaft: camshaft.intake_cam_2,
+        exhaust_camshaft: camshaft.exhaust_cam_2,
         flip_display: true)
 )
 
 
 
-engine Honda_1987(
-    name: "McLaren-Honda MP4/4",
+engine motore(
+    name: "V6",
     starter_torque: coppia_starter,
     starter_speed: velocita_starter,
     redline: zona_rossa,
@@ -399,14 +412,14 @@ engine Honda_1987(
     fuel: Fuel_E102
 )
 
-Honda_1987.add_cylinder_bank(banco_cilindri_1)
-Honda_1987.add_cylinder_bank(banco_cilindri_2)
+motore.add_cylinder_bank(banco_cilindri_1)
+motore.add_cylinder_bank(banco_cilindri_2)
 
-Honda_1987.add_crankshaft(albero_motore)
+motore.add_crankshaft(albero_motore)
 
-Honda_1987.add_ignition_module(modulo_accensione)
+motore.add_ignition_module(modulo_accensione)
 
-vehicle McLaren_F1_1987(
+vehicle veicolo(
     mass: peso_veicolo,
     drag_coefficient: coefficiente_drag, 
     cross_sectional_area: altezza_veicolo * larghezza_veicolo,
@@ -421,22 +434,22 @@ vehicle McLaren_F1_1987(
     max_brake_force: massima_forza_frenante
 )
 
-transmission McLaren_F1_1987_transm(
+transmission cambio(
     max_clutch_torque: massima_coppia_trasmissione
 )
 
-McLaren_F1_1987_transm.add_gear(3.00)
-McLaren_F1_1987_transm.add_gear(2.50)
-McLaren_F1_1987_transm.add_gear(2.00)
-McLaren_F1_1987_transm.add_gear(1.50)
-McLaren_F1_1987_transm.add_gear(1.00)
-McLaren_F1_1987_transm.add_gear(0.75)
+cambio.add_gear(3.00)
+cambio.add_gear(2.50)
+cambio.add_gear(2.00)
+cambio.add_gear(1.50)
+cambio.add_gear(1.00)
+cambio.add_gear(0.75)
 
 public node main {
     run(
-        transmission: McLaren_F1_1987_transm,
-        vehicle: McLaren_F1_1987,
-        engine: Honda_1987
+        transmission: cambio,
+        vehicle: veicolo,
+        engine: motore
     )
 }
 
