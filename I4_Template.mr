@@ -342,7 +342,7 @@ banco_cilindri_1.set_cylinder_head(
 )
 
 engine motore(
-    name: "I3",
+    name: "I4",
     starter_torque: coppia_starter,
     starter_speed: velocita_starter,
     redline: zona_rossa,
