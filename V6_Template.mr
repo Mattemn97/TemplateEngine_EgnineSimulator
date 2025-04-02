@@ -4,12 +4,12 @@ units units()
 constants constants()
 impulse_response_library ir_lib()
 
-label peso_veicolo(700 * units.kg)
+label peso_veicolo(980 * units.kg)
 label coefficiente_drag(0.75)
-label altezza_veicolo(92 * units.cm)
-label larghezza_veicolo(195 * units.cm)
+label altezza_veicolo(110 * units.cm)
+label larghezza_veicolo(175 * units.cm)
 label rapporto_differenziale(2.1)
-label raggio_ruote(13 / 2 * units.inch)
+label raggio_ruote(14 / 2 * units.inch)
 label resistenza_rotolamento(250 * units.N)
 label rigidita_sospensioni(68 * units.Nm / units.deg)
 label smorzamento_sospensioni(1.0)
@@ -31,12 +31,12 @@ label massima_diluizione(0.0)
 
 label coppia_starter(225 * units.lb_ft)
 label velocita_starter(2500 * units.rpm)
-label zona_rossa(16000 * units.rpm)
-label proporzione_acceleratore(2.0)
-label frequenza_simulaizone(20000)
+label zona_rossa(13000 * units.rpm)
+label proporzione_acceleratore(1.0)
+label frequenza_simulaizone(25000)
 
-label foro_cilindro(79 * units.mm)
-label corsa(63.5 * units.mm)
+label alesaggio(100 * units.mm)
+label corsa(75 * units.mm)
 
 label rod_length(4 * units.inch)
 label rod_mass(100 * units.g)
@@ -44,7 +44,6 @@ label compression_height(1.0 * units.inch)
 
 label massa_pistone(100 * units.g)
 
-label ciclo_combustione(2 * 360 * units.deg)
 label ciclo_pistoni(2 * 360 * units.deg)
 
 label crank_mass(5 * units.lb)
@@ -53,32 +52,44 @@ label flywheel_radius(3 * units.inch)
 
 label crank_moment(disk_moment_of_inertia(mass: crank_mass, radius: corsa))
 label flywheel_moment(disk_moment_of_inertia(mass: flywheel_mass, radius: flywheel_radius))
-label other_moment(disk_moment_of_inertia(mass: 10 * units.kg, radius: 1.0 * units.cm))
+label other_moment(disk_moment_of_inertia(mass: 1 * units.kg, radius: 1.0 * units.cm))
 
 label spacing(0.0 * units.inch)
 
-label sfaratura_valvole_scarico((0.75 / 4.0) * ciclo_combustione)
-label sfaratura_valvole_aspirazione((1.75 / 4.0) * ciclo_combustione)
+label apertura_valvola_aspirazione(560 * units.deg)
+label apertura_valvola_scarico(150 * units.deg)
+
+label durata_angolare_aspirazione(220 * units.deg)
+label durata_angolare_scarico(220 * units.deg)
 
 label attenuazione_flusso(1.0)
 label scala_aumento(1.0)
 
-label centro_lobo_aspirazione((0.75 / 4.0) * ciclo_combustione)
-label centro_lobo_scarico((0.75 / 4.0) * ciclo_combustione)
+label centro_lobo_aspirazione(70 * units.deg)
+label centro_lobo_scarico(70 * units.deg)
+
+label time_accensione_pistone_1((0.0 / 6.0) * ciclo_pistoni)
+label time_accensione_pistone_4((1.0 / 6.0) * ciclo_pistoni)
+label time_accensione_pistone_5((2.0 / 6.0) * ciclo_pistoni)
+label time_accensione_pistone_6((3.0 / 6.0) * ciclo_pistoni)
+label time_accensione_pistone_3((4.0 / 6.0) * ciclo_pistoni)
+label time_accensione_pistone_2((5.0 / 6.0) * ciclo_pistoni)
 
 
 function timing_curve(1000 * units.rpm)
 timing_curve.add_sample(0000 * units.rpm, 10 * units.deg)
 timing_curve.add_sample(1000 * units.rpm, 20 * units.deg)
-timing_curve.add_sample(2000 * units.rpm, 40 * units.deg)
+timing_curve.add_sample(2000 * units.rpm, 25 * units.deg)
 timing_curve.add_sample(3000 * units.rpm, 30 * units.deg)
 timing_curve.add_sample(4000 * units.rpm, 35 * units.deg)
 timing_curve.add_sample(5000 * units.rpm, 40 * units.deg)
 timing_curve.add_sample(6000 * units.rpm, 45 * units.deg)
-timing_curve.add_sample(7000 * units.rpm, 50 * units.deg)
-timing_curve.add_sample(8000 * units.rpm, 55 * units.deg)
-timing_curve.add_sample(9000 * units.rpm, 60 * units.deg)
-timing_curve.add_sample(10000 * units.rpm, 65 * units.deg)
+timing_curve.add_sample(8000 * units.rpm, 50 * units.deg)
+timing_curve.add_sample(9000 * units.rpm, 55 * units.deg)
+timing_curve.add_sample(10000 * units.rpm, 60 * units.deg)
+timing_curve.add_sample(11000 * units.rpm, 65 * units.deg)
+timing_curve.add_sample(12000 * units.rpm, 70 * units.deg)
+timing_curve.add_sample(13000 * units.rpm, 75 * units.deg)
 
 
 private node wires {
@@ -110,12 +121,12 @@ ignition_module modulo_accensione(
     limiter_duration: 0.05
 )
 
-modulo_accensione.connect_wire(cavi_modulo_accensione.cavo1, (0.0 / 6.0) * ciclo_pistoni)
-modulo_accensione.connect_wire(cavi_modulo_accensione.cavo4, (1.0 / 6.0) * ciclo_pistoni)
-modulo_accensione.connect_wire(cavi_modulo_accensione.cavo5, (2.0 / 6.0) * ciclo_pistoni)
-modulo_accensione.connect_wire(cavi_modulo_accensione.cavo6, (3.0 / 6.0) * ciclo_pistoni)
-modulo_accensione.connect_wire(cavi_modulo_accensione.cavo3, (4.0 / 6.0) * ciclo_pistoni)
-modulo_accensione.connect_wire(cavi_modulo_accensione.cavo2, (5.0 / 6.0) * ciclo_pistoni)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo1, time_accensione_pistone_1)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo4, time_accensione_pistone_4)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo5, time_accensione_pistone_5)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo6, time_accensione_pistone_6)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo3, time_accensione_pistone_3)
+modulo_accensione.connect_wire(cavi_modulo_accensione.cavo2, time_accensione_pistone_2)
 
 piston_parameters piston_params(
     mass: massa_pistone,
@@ -145,12 +156,12 @@ crankshaft albero_motore(
     tdc: 45 * units.deg
 )
 
-rod_journal rod_journal1(angle: (0.0 / 6.0) * ciclo_pistoni)
-rod_journal rod_journal2(angle: (1.0 / 6.0) * ciclo_pistoni)
-rod_journal rod_journal3(angle: (2.0 / 6.0) * ciclo_pistoni)
-rod_journal rod_journal4(angle: (3.0 / 6.0) * ciclo_pistoni)
-rod_journal rod_journal5(angle: (4.0 / 6.0) * ciclo_pistoni)
-rod_journal rod_journal6(angle: (5.0 / 6.0) * ciclo_pistoni)
+rod_journal rod_journal1(angle: time_accensione_pistone_1)
+rod_journal rod_journal2(angle: time_accensione_pistone_2)
+rod_journal rod_journal3(angle: time_accensione_pistone_3)
+rod_journal rod_journal4(angle: time_accensione_pistone_4)
+rod_journal rod_journal5(angle: time_accensione_pistone_5)
+rod_journal rod_journal6(angle: time_accensione_pistone_6)
 
 albero_motore.add_rod_journal(rod_journal1)
 albero_motore.add_rod_journal(rod_journal2)
@@ -191,14 +202,14 @@ exhaust_system sistema_scarico_2(
 )
 
 harmonic_cam_lobe profilo_asporazione(
-    duration_at_50_thou: (1.5 / 4.0) * ciclo_combustione,
+    duration_at_50_thou: durata_angolare_aspirazione,
     gamma: 1.0,
     lift: 500 * units.thou,
     steps: 100
 )
 
 harmonic_cam_lobe profilo_scarico(
-    duration_at_50_thou: (1.5 / 4.0) * ciclo_combustione,
+    duration_at_50_thou: durata_angolare_scarico,
     gamma: 1.0,
     lift: 500 * units.thou,
     steps: 100
@@ -226,36 +237,36 @@ camshaft albero_camme_asporazione_1(
     base_radius: 0.5 * units.inch,
     lobe_profile: profilo_asporazione
 )
-albero_camme_asporazione_1.add_lobe(centro_lobo_aspirazione + (0.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
-albero_camme_asporazione_1.add_lobe(centro_lobo_aspirazione + (4.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
-albero_camme_asporazione_1.add_lobe(centro_lobo_aspirazione + (2.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
+albero_camme_asporazione_1.add_lobe(time_accensione_pistone_1 - centro_lobo_aspirazione + apertura_valvola_aspirazione)
+albero_camme_asporazione_1.add_lobe(time_accensione_pistone_3 - centro_lobo_aspirazione + apertura_valvola_aspirazione)
+albero_camme_asporazione_1.add_lobe(time_accensione_pistone_5 - centro_lobo_aspirazione + apertura_valvola_aspirazione)
 
 camshaft albero_camme_scarico_1(
     advance: 0 * units.deg,
     base_radius: 0.5 * units.inch,
     lobe_profile: profilo_scarico
 )
-albero_camme_scarico_1.add_lobe(centro_lobo_scarico + (0.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
-albero_camme_scarico_1.add_lobe(centro_lobo_scarico + (4.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
-albero_camme_scarico_1.add_lobe(centro_lobo_scarico + (2.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
+albero_camme_scarico_1.add_lobe(time_accensione_pistone_1 + centro_lobo_scarico + apertura_valvola_scarico)
+albero_camme_scarico_1.add_lobe(time_accensione_pistone_3 + centro_lobo_scarico + apertura_valvola_scarico)
+albero_camme_scarico_1.add_lobe(time_accensione_pistone_5 + centro_lobo_scarico + apertura_valvola_scarico)
 
 camshaft albero_camme_asporazione_2(
     advance: 0 * units.deg,
     base_radius: 0.5 * units.inch,
     lobe_profile: profilo_asporazione
 )
-albero_camme_asporazione_2.add_lobe(centro_lobo_aspirazione + (5.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
-albero_camme_asporazione_2.add_lobe(centro_lobo_aspirazione + (1.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
-albero_camme_asporazione_2.add_lobe(centro_lobo_aspirazione + (3.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_aspirazione)
+albero_camme_asporazione_2.add_lobe(time_accensione_pistone_2 - centro_lobo_aspirazione + apertura_valvola_aspirazione)
+albero_camme_asporazione_2.add_lobe(time_accensione_pistone_4 - centro_lobo_aspirazione + apertura_valvola_aspirazione)
+albero_camme_asporazione_2.add_lobe(time_accensione_pistone_6 - centro_lobo_aspirazione + apertura_valvola_aspirazione)
 
 camshaft albero_camme_scarico_2(
     advance: 0 * units.deg,
     base_radius: 0.5 * units.inch,
     lobe_profile: profilo_scarico
 )
-albero_camme_scarico_2.add_lobe(centro_lobo_scarico + (5.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
-albero_camme_scarico_2.add_lobe(centro_lobo_scarico + (1.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
-albero_camme_scarico_2.add_lobe(centro_lobo_scarico + (3.0 / 6.0) * ciclo_pistoni + sfaratura_valvole_scarico)
+albero_camme_scarico_2.add_lobe(time_accensione_pistone_2 + centro_lobo_scarico + apertura_valvola_scarico)
+albero_camme_scarico_2.add_lobe(time_accensione_pistone_4 + centro_lobo_scarico + apertura_valvola_scarico)
+albero_camme_scarico_2.add_lobe(time_accensione_pistone_6 + centro_lobo_scarico + apertura_valvola_scarico)
 
 
 function flusso_aspirazione(50 * units.thou)
@@ -318,7 +329,7 @@ public node testata_motore{
 }
 
 cylinder_bank banco_cilindri_1(
-    bore: foro_cilindro,
+    bore: alesaggio,
     deck_height: corsa / 2 + rod_length + compression_height,
     angle: -40.0 * units.deg
 )
@@ -363,7 +374,7 @@ banco_cilindri_1.set_cylinder_head(
 
 
 cylinder_bank banco_cilindri_2(
-    bore: foro_cilindro,
+    bore: alesaggio,
     deck_height: corsa / 2 + rod_length + compression_height,
     angle: 40.0 * units.deg
 )
@@ -446,12 +457,11 @@ transmission cambio(
     max_clutch_torque: massima_coppia_trasmissione
 )
 
-cambio.add_gear(5.00)
-cambio.add_gear(4.00)
-cambio.add_gear(3.00)
-cambio.add_gear(2.66)
-cambio.add_gear(2.33)
-cambio.add_gear(2.00)
+cambio.add_gear(1.875)
+cambio.add_gear(1.555)
+cambio.add_gear(1.300)
+cambio.add_gear(1.125)
+cambio.add_gear(1.000)
 
 public node main {
     run(
